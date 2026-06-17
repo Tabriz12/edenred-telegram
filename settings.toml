@@ -1,0 +1,10 @@
+[default]
+webhook_listen = "0.0.0.0"
+webhook_port = 8000
+webhook_path = "telegram"
+drop_pending_updates = true
+
+start_reply = "Send a message that contains digits only."
+help_reply = "Only digits are accepted. Example: 123456"
+digits_accepted_reply = "Accepted: {digits}"
+digits_rejected_reply = "Please send digits only."
