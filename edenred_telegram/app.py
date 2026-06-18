@@ -8,9 +8,9 @@ from edenred_telegram.handlers import accept_digits, help_command, start
 def build_application() -> Application:
     app_settings = require_settings()
 
-    application = Application.builder().token(
-        app_settings.get("TELEGRAM_BOT_TOKEN")
-    ).build()
+    application = (
+        Application.builder().token(app_settings.get("TELEGRAM_BOT_TOKEN")).build()
+    )
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
