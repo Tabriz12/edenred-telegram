@@ -1,10 +1,3 @@
+from edenred_telegram.config import get_setting, optional_setting, require_settings, settings
 
-from dynaconf import Dynaconf
-
-settings = Dynaconf(
-    envvar_prefix="DYNACONF",
-    settings_files=['settings.toml', '.secrets.toml'],
-)
-
-# `envvar_prefix` = export envvars with `export DYNACONF_FOO=bar`.
-# `settings_files` = Load these files in the order.
+__all__ = ("get_setting", "optional_setting", "require_settings", "settings")
