@@ -20,6 +20,7 @@ settings = Dynaconf(
 REQUIRED_SETTINGS = (
     "TELEGRAM_BOT_TOKEN",
     "WEBHOOK_URL",
+    "TELEGRAM_WEBHOOK_SECRET_TOKEN",
 )
 
 
