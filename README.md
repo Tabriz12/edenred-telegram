@@ -40,6 +40,53 @@ The bot starts a webhook server using:
 - `EDENRED_WEBHOOK_PATH` default `telegram`
 - `EDENRED_WEBHOOK_URL` required, for example `https://example.com/telegram`
 
+## Docker
+
+Build the image locally:
+
+```bash
+docker build -t edenred-telegram:local .
+```
+
+Run it with environment variables:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e EDENRED_TELEGRAM_BOT_TOKEN=123456789:replace-with-your-token \
+  -e EDENRED_WEBHOOK_URL=https://example.com/telegram \
+  -e EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=replace-with-a-random-secret \
+  edenred-telegram:local
+```
+
+The image listens on `0.0.0.0:8080` by default for Cloud Run compatibility.
+
+## Deploy to Google Cloud Run
+
+Create the runtime secrets:
+
+```bash
+gcloud secrets create telegram-bot-token --data-file=-
+gcloud secrets create telegram-webhook-url --data-file=-
+gcloud secrets create telegram-webhook-secret-token --data-file=-
+```
+
+Create the Artifact Registry Docker repository once:
+
+```bash
+gcloud artifacts repositories create cloud-run \
+  --repository-format=docker \
+  --location=europe-west1
+```
+
+Grant the Cloud Run runtime service account access to those secrets, then deploy
+with Cloud Build:
+
+```bash
+gcloud builds submit \
+  --config cloudbuild.yaml \
+  --substitutions _REGION=europe-west1,_REPOSITORY=cloud-run,_SERVICE=edenred-telegram
+```
+
 ## Behavior
 
 - `/start` and `/help` explain that only digits are accepted.

@@ -6,8 +6,15 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "dynaconf>=3.2.13",
-    "python-telegram-bot>=22.8",
+    "python-telegram-bot[webhooks]>=22.8",
 ]
 
 [project.scripts]
 edenred-telegram = "edenred_telegram.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true

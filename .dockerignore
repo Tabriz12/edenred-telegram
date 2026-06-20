@@ -1,0 +1,10 @@
+.git
+.agents
+.codex
+.venv
+__pycache__/
+*.py[cod]
+.env
+.secrets.toml
+.secrets.toml.*
+Dockerfile

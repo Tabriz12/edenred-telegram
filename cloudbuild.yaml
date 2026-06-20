@@ -1,0 +1,39 @@
+substitutions:
+  _REGION: europe-west3
+  _REPOSITORY: cloud-run-source-deploy
+  _SERVICE: telegram-ednred
+  _BOT_TOKEN_SECRET: telegram-bot-token
+  _WEBHOOK_URL_SECRET: telegram-webhook-url
+  _WEBHOOK_SECRET_TOKEN_SECRET: telegram-webhook-secret-token
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --set-secrets
+      - EDENRED_TELEGRAM_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest,EDENRED_WEBHOOK_URL=${_WEBHOOK_URL_SECRET}:latest,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=${_WEBHOOK_SECRET_TOKEN_SECRET}:latest
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
