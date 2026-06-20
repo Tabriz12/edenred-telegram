@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from edenred_telegram.config import get_setting, optional_setting, require_settings
+from edenred_telegram.config import get_setting, require_settings
 from edenred_telegram.handlers import accept_digits, help_command, start
 
 logging.basicConfig(
@@ -46,5 +46,5 @@ def main() -> None:
         webhook_url=get_setting("WEBHOOK_URL"),
         allowed_updates=Update.ALL_TYPES,
         drop_pending_updates=bool(get_setting("DROP_PENDING_UPDATES")),
-        secret_token=optional_setting("TELEGRAM_WEBHOOK_SECRET_TOKEN"),
+        secret_token=get_setting("TELEGRAM_WEBHOOK_SECRET_TOKEN"),
     )
