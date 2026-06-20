@@ -1,9 +1,9 @@
 substitutions:
   _REGION: europe-west3
-  _REPOSITORY: cloud-run
-  _SERVICE: edenred-telegram
-  _WEBHOOK_URL: https://example.com/telegram
+  _REPOSITORY: cloud-run-source-deploy
+  _SERVICE: telegram-ednred
   _BOT_TOKEN_SECRET: telegram-bot-token
+  _WEBHOOK_URL_SECRET: telegram-webhook-url
   _WEBHOOK_SECRET_TOKEN_SECRET: telegram-webhook-secret-token
 
 steps:
@@ -32,10 +32,8 @@ steps:
       - --platform
       - managed
       - --allow-unauthenticated
-      - --set-env-vars
-      - EDENRED_WEBHOOK_URL=${_WEBHOOK_URL}
       - --set-secrets
-      - EDENRED_TELEGRAM_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=${_WEBHOOK_SECRET_TOKEN_SECRET}:latest
+      - EDENRED_TELEGRAM_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest,EDENRED_WEBHOOK_URL=${_WEBHOOK_URL_SECRET}:latest,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=${_WEBHOOK_SECRET_TOKEN_SECRET}:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA

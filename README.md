@@ -66,6 +66,7 @@ Create the runtime secrets:
 
 ```bash
 gcloud secrets create telegram-bot-token --data-file=-
+gcloud secrets create telegram-webhook-url --data-file=-
 gcloud secrets create telegram-webhook-secret-token --data-file=-
 ```
 
@@ -83,7 +84,7 @@ with Cloud Build:
 ```bash
 gcloud builds submit \
   --config cloudbuild.yaml \
-  --substitutions _REGION=europe-west1,_REPOSITORY=cloud-run,_SERVICE=edenred-telegram,_WEBHOOK_URL=https://your-domain.com/telegram
+  --substitutions _REGION=europe-west1,_REPOSITORY=cloud-run,_SERVICE=edenred-telegram
 ```
 
 ## Behavior
