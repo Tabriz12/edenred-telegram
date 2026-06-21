@@ -12,7 +12,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY edenred_telegram ./edenred_telegram
-COPY settings.toml logger.py ./
+COPY logger.py ./
 RUN uv sync --frozen --no-dev
 
 RUN useradd --create-home --shell /usr/sbin/nologin appuser \

@@ -10,13 +10,7 @@ Install dependencies:
 uv sync
 ```
 
-Create local secrets from the example:
-
-```bash
-cp .secrets.toml.example .secrets.toml
-```
-
-Set these values in `.secrets.toml` or as environment variables:
+Set these environment variables:
 
 ```bash
 EDENRED_TELEGRAM_BOT_TOKEN=123456789:replace-with-your-token
@@ -24,8 +18,8 @@ EDENRED_WEBHOOK_URL=https://example.com/telegram
 EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=replace-with-a-random-secret
 ```
 
-Public defaults live in `settings.toml`. Secrets are loaded from `.secrets.toml`,
-`.env`, or `EDENRED_*` environment variables via Dynaconf.
+Runtime configuration is read from `EDENRED_*` environment variables. Optional
+values use the defaults listed below when unset.
 
 ## Run
 
