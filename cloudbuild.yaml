@@ -5,6 +5,9 @@ substitutions:
   _BOT_TOKEN_SECRET: telegram-bot-token
   _WEBHOOK_URL_SECRET: telegram-webhook-url
   _WEBHOOK_SECRET_TOKEN_SECRET: telegram-webhook-secret-token
+  _BOT_TOKEN_SECRET_VERSION: latest
+  _WEBHOOK_URL_SECRET_VERSION: latest
+  _WEBHOOK_SECRET_TOKEN_SECRET_VERSION: latest
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -20,20 +23,29 @@ steps:
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - run
-      - deploy
-      - ${_SERVICE}
-      - --image
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
-      - --region
-      - ${_REGION}
-      - --platform
-      - managed
-      - --allow-unauthenticated
-      - --set-secrets
-      - EDENRED_TELEGRAM_BOT_TOKEN=hh,EDENRED_WEBHOOK_URL=${_WEBHOOK_URL_SECRET}:latest,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=${_WEBHOOK_SECRET_TOKEN_SECRET}:latest
+      - -c
+      - >-
+        gcloud run deploy ${_SERVICE}
+        --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+        --region ${_REGION}
+        --platform managed
+        --allow-unauthenticated
+        --set-env-vars EDENRED_TELEGRAM_BOT_TOKEN=$$EDENRED_TELEGRAM_BOT_TOKEN,EDENRED_WEBHOOK_URL=$$EDENRED_WEBHOOK_URL,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=$$EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
+    secretEnv:
+      - EDENRED_TELEGRAM_BOT_TOKEN
+      - EDENRED_WEBHOOK_URL
+      - EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/${_BOT_TOKEN_SECRET}/versions/${_BOT_TOKEN_SECRET_VERSION}
+      env: EDENRED_TELEGRAM_BOT_TOKEN
+    - versionName: projects/$PROJECT_ID/secrets/${_WEBHOOK_URL_SECRET}/versions/${_WEBHOOK_URL_SECRET_VERSION}
+      env: EDENRED_WEBHOOK_URL
+    - versionName: projects/$PROJECT_ID/secrets/${_WEBHOOK_SECRET_TOKEN_SECRET}/versions/${_WEBHOOK_SECRET_TOKEN_SECRET_VERSION}
+      env: EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
