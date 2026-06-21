@@ -12,10 +12,12 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY edenred_telegram ./edenred_telegram
-COPY settings.toml ./
+COPY settings.toml logger.py ./
 RUN uv sync --frozen --no-dev
 
-RUN useradd --create-home --shell /usr/sbin/nologin appuser
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && mkdir -p /app/logs \
+    && chown appuser:appuser /app/logs
 USER appuser
 
 EXPOSE 8080
