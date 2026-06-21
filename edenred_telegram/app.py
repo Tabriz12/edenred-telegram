@@ -30,8 +30,6 @@ def main() -> None:
         "Starting bot with webhook on %s:%s%s%s",
         get_setting("WEBHOOK_LISTEN"),
         get_setting("WEBHOOK_PORT"),
-        get_setting("WEBHOOK_PATH"),
-        get_setting("WEBHOOK_URL"),
     )
 
     application.run_webhook(

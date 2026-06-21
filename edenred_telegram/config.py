@@ -1,21 +1,22 @@
-from pathlib import Path
+import os
 from typing import Any
 
-from dynaconf import Dynaconf
+from logger import get_logger
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 ENVVAR_PREFIX = "EDENRED"
-SETTINGS_FILES = (
-    BASE_DIR / "settings.toml",
-    BASE_DIR / ".secrets.toml",
-)
 
-settings = Dynaconf(
-    envvar_prefix=ENVVAR_PREFIX,
-    environments=True,
-    load_dotenv=True,
-    settings_files=SETTINGS_FILES,
-)
+logger = get_logger(__name__)
+
+DEFAULT_SETTINGS = {
+    "WEBHOOK_LISTEN": "0.0.0.0",
+    "WEBHOOK_PORT": 8000,
+    "WEBHOOK_PATH": "telegram",
+    "DROP_PENDING_UPDATES": True,
+    "START_REPLY": "Send a message that contains digits only.",
+    "HELP_REPLY": "Only digits are accepted. Example: 123456",
+    "DIGITS_ACCEPTED_REPLY": "Accepted: {digits}",
+    "DIGITS_REJECTED_REPLY": "Please send digits only.",
+}
 
 REQUIRED_SETTINGS = (
     "TELEGRAM_BOT_TOKEN",
@@ -25,18 +26,24 @@ REQUIRED_SETTINGS = (
 
 
 def get_setting(name: str, default: Any = None) -> Any:
-    """Read config through Dynaconf so EDENRED_* env vars override local files."""
-    value = settings.get(name, default)
-    return default if value == "" else value
+    value = os.getenv(f"{ENVVAR_PREFIX}_{name}")
+    fallback = DEFAULT_SETTINGS.get(name, default)
+    if value in (None, ""):
+        return fallback
+
+    if isinstance(fallback, bool):
+        return value.lower() in {"1", "true", "yes", "on"}
+    if isinstance(fallback, int):
+        return int(value)
+
+    return value
 
 
-def require_settings() -> Dynaconf:
+def require_settings() -> None:
     missing = [key for key in REQUIRED_SETTINGS if not get_setting(key)]
     if missing:
         names = ", ".join(missing)
         raise RuntimeError(f"Missing required settings: {names}")
-
-    return settings
 
 
 def optional_setting(name: str, default: Any = None) -> Any:
