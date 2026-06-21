@@ -1,16 +1,11 @@
-import logging
-
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from edenred_telegram.config import get_setting, require_settings
 from edenred_telegram.handlers import accept_digits, help_command, start
+from logger import get_logger
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def build_application() -> Application:
