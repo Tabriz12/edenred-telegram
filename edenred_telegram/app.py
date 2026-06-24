@@ -27,7 +27,7 @@ def main() -> None:
     application = build_application()
 
     logger.info(
-        "Starting bot with webhook on %s:%s%s%s",
+        "Starting bot with webhook on %s:%s",
         get_setting("WEBHOOK_LISTEN"),
         get_setting("WEBHOOK_PORT"),
     )
