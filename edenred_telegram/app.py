@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
-from edenred_telegram.config import get_setting, require_settings
+from edenred_telegram.config import get_setting, get_webhook_path, require_settings
 from edenred_telegram.handlers import accept_digits, help_command, start
 from logger import get_logger
 
@@ -35,7 +35,7 @@ def main() -> None:
     application.run_webhook(
         listen=get_setting("WEBHOOK_LISTEN"),
         port=int(get_setting("WEBHOOK_PORT")),
-        url_path=get_setting("WEBHOOK_PATH"),
+        url_path=get_webhook_path(),
         webhook_url=get_setting("WEBHOOK_URL"),
         allowed_updates=Update.ALL_TYPES,
         drop_pending_updates=bool(get_setting("DROP_PENDING_UPDATES")),

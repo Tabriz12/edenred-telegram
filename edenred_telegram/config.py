@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from typing import Any
 
 from logger import get_logger
@@ -10,7 +11,6 @@ logger = get_logger(__name__)
 DEFAULT_SETTINGS = {
     "WEBHOOK_LISTEN": "0.0.0.0",
     "WEBHOOK_PORT": 8000,
-    "WEBHOOK_PATH": "telegram",
     "DROP_PENDING_UPDATES": True,
     "START_REPLY": "Send a message that contains digits only.",
     "HELP_REPLY": "Only digits are accepted. Example: 123456",
@@ -48,3 +48,12 @@ def require_settings() -> None:
 
 def optional_setting(name: str, default: Any = None) -> Any:
     return get_setting(name, default)
+
+
+def get_webhook_path() -> str:
+    explicit_path = os.getenv(f"{ENVVAR_PREFIX}_WEBHOOK_PATH")
+    if explicit_path not in (None, ""):
+        return explicit_path.strip("/")
+
+    webhook_url = get_setting("WEBHOOK_URL", "")
+    return urlparse(webhook_url).path.strip("/")
