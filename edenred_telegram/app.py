@@ -6,7 +6,7 @@ from edenred_telegram.handlers import accept_digits, help_command, start
 from logger import get_logger
 
 logger = get_logger(__name__)
-
+# dummy
 
 def build_application() -> Application:
     require_settings()
