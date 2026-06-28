@@ -10,36 +10,157 @@ substitutions:
   _WEBHOOK_SECRET_TOKEN_SECRET_VERSION: latest
 
 steps:
-  - name: gcr.io/cloud-builders/docker
+  - id: Detect code changes
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
     args:
-      - build
-      - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
-      - .
+      - -c
+      - |-
+        set -euo pipefail
+
+        decision=/workspace/.should_build
+        echo false > "$decision"
+
+        if ! git rev-parse --git-dir >/dev/null 2>&1; then
+          echo "Git metadata is unavailable; running the build."
+          echo true > "$decision"
+          exit 0
+        fi
+
+        if ! base="$(git rev-parse "$COMMIT_SHA^" 2>/dev/null)"; then
+          echo "No parent commit found; running the build."
+          echo true > "$decision"
+          exit 0
+        fi
+
+        is_runtime_file() {
+          case "$1" in
+            Dockerfile|cloudbuild.yaml|pyproject.toml|uv.lock|config.py|logger.py|main.py|edenred_telegram/*.py)
+              return 0
+              ;;
+            *)
+              return 1
+              ;;
+          esac
+        }
+
+        is_python_code_change() {
+          python3 - "$1" "$2" <<'PY'
+        import io
+        import sys
+        import tokenize
+
+        def normalize(path):
+            with open(path, "rb") as file:
+                source = file.read()
+
+            tokens = []
+            try:
+                stream = io.BytesIO(source).readline
+                for token in tokenize.tokenize(stream):
+                    if token.type in {
+                        tokenize.COMMENT,
+                        tokenize.ENCODING,
+                        tokenize.ENDMARKER,
+                        tokenize.INDENT,
+                        tokenize.DEDENT,
+                        tokenize.NEWLINE,
+                        tokenize.NL,
+                    }:
+                        continue
+                    tokens.append((token.type, token.string))
+            except tokenize.TokenError:
+                sys.exit(1)
+
+            return tokens
+
+        sys.exit(0 if normalize(sys.argv[1]) != normalize(sys.argv[2]) else 1)
+        PY
+        }
+
+        is_text_code_change() {
+          ! diff -q \
+            <(sed -E '/^[[:space:]]*($|#)/d' "$1") \
+            <(sed -E '/^[[:space:]]*($|#)/d' "$2") \
+            >/dev/null
+        }
+
+        git diff --name-only -z "$base" "$COMMIT_SHA" > /tmp/changed-files
+
+        while IFS= read -r -d '' path; do
+          if ! is_runtime_file "$path"; then
+            echo "Ignoring non-runtime change: $path"
+            continue
+          fi
+
+          old_file="/tmp/old-${path//\//-}"
+          new_file="/tmp/new-${path//\//-}"
+          git show "$base:$path" > "$old_file" 2>/dev/null || true
+          git show "$COMMIT_SHA:$path" > "$new_file" 2>/dev/null || true
+
+          if [[ "$path" == *.py ]]; then
+            if is_python_code_change "$old_file" "$new_file"; then
+              echo "Runtime code changed: $path"
+              echo true > "$decision"
+              exit 0
+            fi
+          elif is_text_code_change "$old_file" "$new_file"; then
+            echo "Runtime config changed: $path"
+            echo true > "$decision"
+            exit 0
+          fi
+
+          echo "Ignoring comment-only or whitespace-only change: $path"
+        done < /tmp/changed-files
+
+        echo "No runtime code changes detected; skipping build, push, and deploy."
 
   - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
     args:
-      - push
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
+      - -c
+      - |-
+        if [[ "$(cat /workspace/.should_build)" != "true" ]]; then
+          echo "Skipping Docker build."
+          exit 0
+        fi
+
+        docker build \
+          -t ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA \
+          .
+
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |-
+        if [[ "$(cat /workspace/.should_build)" != "true" ]]; then
+          echo "Skipping Docker push."
+          exit 0
+        fi
+
+        docker push ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     args:
       - -c
-      - >-
-        gcloud run deploy ${_SERVICE}
-        --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
-        --region ${_REGION}
-        --platform managed
-        --allow-unauthenticated
-        --set-env-vars EDENRED_TELEGRAM_BOT_TOKEN=$$EDENRED_TELEGRAM_BOT_TOKEN,EDENRED_WEBHOOK_URL=$$EDENRED_WEBHOOK_URL,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=$$EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
+      - |-
+        if [[ "$(cat /workspace/.should_build)" != "true" ]]; then
+          echo "Skipping Cloud Run deploy."
+          exit 0
+        fi
+
+        gcloud run deploy ${_SERVICE} \
+          --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA \
+          --region ${_REGION} \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars EDENRED_TELEGRAM_BOT_TOKEN=$$EDENRED_TELEGRAM_BOT_TOKEN,EDENRED_WEBHOOK_URL=$$EDENRED_WEBHOOK_URL,EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=$$EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
     secretEnv:
       - EDENRED_TELEGRAM_BOT_TOKEN
       - EDENRED_WEBHOOK_URL
       - EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN
-
-images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$COMMIT_SHA
 
 availableSecrets:
   secretManager:

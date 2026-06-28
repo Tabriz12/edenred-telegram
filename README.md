@@ -31,8 +31,8 @@ The bot starts a webhook server using:
 
 - `EDENRED_WEBHOOK_LISTEN` default `0.0.0.0`
 - `EDENRED_WEBHOOK_PORT` default `8000`
+- `EDENRED_WEBHOOK_PATH` default `telegram`
 - `EDENRED_WEBHOOK_URL` required, for example `https://example.com/telegram`
-- `EDENRED_WEBHOOK_PATH` optional, defaults to the path in `EDENRED_WEBHOOK_URL`
 
 ## Docker
 
