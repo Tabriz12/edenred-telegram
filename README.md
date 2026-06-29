@@ -21,6 +21,15 @@ EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN=replace-with-a-random-secret
 Runtime configuration is read from `EDENRED_*` environment variables. Optional
 values use the defaults listed below when unset.
 
+Configure the Telegram webhook after the service is reachable at
+`EDENRED_WEBHOOK_URL`:
+
+```bash
+curl "https://api.telegram.org/bot$EDENRED_TELEGRAM_BOT_TOKEN/setWebhook" \
+  -d "url=$EDENRED_WEBHOOK_URL" \
+  -d "secret_token=$EDENRED_TELEGRAM_WEBHOOK_SECRET_TOKEN"
+```
+
 ## Run
 
 ```bash
